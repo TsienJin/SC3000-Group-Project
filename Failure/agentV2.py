@@ -12,7 +12,7 @@ from main import ABC
 
 
 class QLearnAgentV2(IAgent, ABC):
-    def __init__(self, maxEpisode:int=100, learningRate:float=0.5, bias:float=0.5, discount=0.5, penalty=-1, visualise=False):
+    def __init__(self, maxEpisode:int=100, learningRate:float=0.5, bias:float=0.5, discount=0.5, penalty=-4, visualise=True):
         if maxEpisode<=0:
             raise ValueError("Invalid number for maxEpisode! Minimum 1")
 
@@ -68,7 +68,7 @@ class QLearnAgentV2(IAgent, ABC):
     def policy(self, bucket, state) -> int:
 
         if bucket not in self.qTable.keys():
-            # print("NEW")
+            print("NEW")
             self.qTable[bucket] = [0,0]
             cPos = state[0]
             cVel = state[1]

@@ -64,7 +64,7 @@ class QLearnAgentV3(IAgent, ABC):
         cPos = np.rint((state[0] * .25))
         cVel = np.rint((state[1] * 2))
         pPos = np.rint((state[2] * 1))
-        pVel = np.rint((state[3] * 2g))
+        pVel = np.rint((state[3] * 2))
 
         return tuple(np.array([cVel, pVel, pPos]).astype(np.int32))
 
