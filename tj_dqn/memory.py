@@ -11,8 +11,7 @@ src: https://deeplizard.com/learn/video/Bcuj2fTH4_4
 import random
 from collections import deque
 
-
-from types import Observation, Record
+from localTypes import Observation, Record
 
 
 class Memory:

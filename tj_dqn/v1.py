@@ -2,7 +2,7 @@ import os
 import sys
 
 from memory import Memory
-from types import Record, Observation
+from localTypes import Record, Observation
 
 import matplotlib
 from collections import namedtuple
@@ -25,10 +25,11 @@ if is_ipython:
 class DQN(nn.Module):
 
     def __init__(self,
-                 n_obsv: int, n_actions: int, n_layer: int = 0, n_layerSize: int = 6,
+                 n_obsv: int, n_actions: int, n_layer: int = 1, n_layerSize: int = 6,
                  learningRate: float = 0.0001, gamma: float = 0.95,
                  expDecay: float = 0.999, expMin: float = 0.001, expMax: float = 1.0,
-                 _device: str = "cpu"):
+                 _device: str = "cpu",
+                 memory:Memory = Memory()):
         """
 
         :param n_obsv: size of observation space
@@ -67,7 +68,7 @@ class DQN(nn.Module):
         self.n_layer = n_layer
         self.n_layerSize = n_layerSize
 
-        self.memory = Memory()
+        self.memory = memory
 
         self.layers = nn.ModuleList(self.__createLayers())
         self.optim = optim.Adam(self.parameters(), lr=self.learningRate)
@@ -110,3 +111,4 @@ if __name__ == '__main__':
     egObsv = np.array([0.24, -2, 0.002, 4]).astype(np.float32)
 
     print(model.forward(torch.as_tensor(egObsv)))
+    print(model.parameters())
