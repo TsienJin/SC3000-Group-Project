@@ -11,16 +11,9 @@ import torch
 from torch import nn
 from torch import optim
 import torch.nn.functional as F
+
+
 # from torch.utils.data import DataLoader
-
-import gym
-
-env = gym.make("CartPole-v1")
-
-is_ipython = 'inline' in matplotlib.get_backend()
-if is_ipython:
-    from IPython import display
-
 
 class DQN(nn.Module):
 
@@ -29,7 +22,7 @@ class DQN(nn.Module):
                  learningRate: float = 0.0001, gamma: float = 0.95,
                  expDecay: float = 0.999, expMin: float = 0.001, expMax: float = 1.0,
                  _device: str = "cpu",
-                 memory:Memory = Memory()):
+                 memory: Memory = Memory()):
         """
 
         :param n_obsv: size of observation space
