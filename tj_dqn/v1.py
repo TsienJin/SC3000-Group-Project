@@ -85,7 +85,7 @@ class DQN(nn.Module):
 
         return layers
 
-    def forward(self, x):
+    def forward(self, x:torch.float32) -> torch.float32:
         """
         Processes the given state and returns a tensor with qValues for actions
         :param x: <torch.tensor> with shape (1,4) and type float32 | State of current observation as a tensor

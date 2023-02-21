@@ -19,15 +19,15 @@ class Memory:
         self.cap = maxCapacity
         self.memory = deque([], maxlen=maxCapacity)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.memory)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"""Memory() capacity [{self.__len__}/{self.cap}]"""
 
-    def push(self, record:Record):
+    def push(self, record:Record) -> None:
         self.memory.append(record)
 
-    def sample(self, size:int):
+    def sample(self, size:int) -> [Record]:
         assert size>0
         return random.sample(self.memory, size)
