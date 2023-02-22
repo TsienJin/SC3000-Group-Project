@@ -24,19 +24,20 @@ class Agent:
     MAX_EP = 1_000_000
 
     # Q Value vals
-    DISCOUNT = 0.99
+    DISCOUNT = 0.999
+    LEARNING_RATE = 0.8
 
     # Epsilon GREEDY vals
-    EPS = 0.5
+    EPS = 0.9999
     EPS_DECAY = 0.999
     EPS_MIN = 0.1
     EPS_MAX = 1.0
 
     # Memory vals
-    MEM_SIZE = 500_000
-    MIN_MEM_SIZE = 1000
+    MEM_SIZE = 50_000
+    MIN_MEM_SIZE = 1_000
     MEM_BATCH = 1000
-    TARGET_UPDATE_FREQ = 500
+    TARGET_UPDATE_FREQ = 100
 
     def __init__(self, maxEp:int=10_000, env=gym.make("CartPole-v1")):
 
@@ -53,7 +54,7 @@ class Agent:
 
     def __printStats(self):
         sys.stdout.flush()
-        print(f"EP: {self.EPS:.3f} | MEM: {len(self.memory)} | EP: {self.episodeCounter} | AVG: {self.totalReward/self.episodeCounter:.5f}", end="\r")
+        print(f"EP: {self.EPS:.3f} | MEM: {len(self.memory)} | EP: {self.episodeCounter} | AVG: {self.totalReward/self.episodeCounter:.5f}", end='\r')
 
     def predict(self, environment:ParseEnvironment) -> int:
         if self.EPS < self.EPS_MIN:
@@ -61,22 +62,21 @@ class Agent:
             return torch.argmax(res).detach().numpy()
         else:
             # print("USING RANDOM")
-            self.EPS *= self.EPS_DECAY
+            self.EPS = self.EPS * self.EPS_DECAY
             return random.randint(0,1)
 
 
     def getMaxQ(self, environment:ParseEnvironment) -> torch.tensor:
         res = self.targetModel.forward(environment.toTensor())
+        # print(res)
         return res.clone().detach().numpy()
 
     def train(self):
         if len(self.memory) < self.MIN_MEM_SIZE:
             return
 
-        self.EPS = self.EPS * self.EPS_DECAY
+        batch = self.memory.sample(size=self.MEM_BATCH)
 
-
-        batch = self.memory.sample(size=2)
         allStates = np.array([record.state for record in batch])  # need to check if this works; no intellisense
         predicted = [self.getMaxQ(record.state) for record in batch]
         predictedNew = [self.getMaxQ(record.nextState) for record in batch]
@@ -85,18 +85,20 @@ class Agent:
         valsToFit = []
 
         for index, env in enumerate(batch):
+            maxFutureQ = np.max(self.getMaxQ(env.nextState))
+
             if not env.state.isDone:
-                maxFutureQ = np.max(predictedNew[index])
                 newQ = env.reward + self.DISCOUNT * maxFutureQ
             else:
                 newQ = env.reward
 
-            currentVals = predicted[index]
-            # print("old", currentVals)
-            oldValsToFit.append(currentVals)
-            currentVals[env.action] = newQ
-            # print("new", currentVals)
-            valsToFit.append(currentVals)
+            oldFit = self.getMaxQ(env.state)
+            toFit = deepcopy(oldFit)
+            toFit[env.action] = newQ
+
+
+            oldValsToFit.append(oldFit)
+            valsToFit.append(toFit)
 
         loss = self.model.crit(torch.tensor(np.array(oldValsToFit), requires_grad=True), torch.tensor(np.array(valsToFit), requires_grad=True))
         self.model.optim.zero_grad()
@@ -108,7 +110,8 @@ class Agent:
 
 
     def run(self):
-        while self.episodeCounter < self.MAX_EP:
+        while self.episodeCounter < self.maxEpisode:
+            self.episodeCounter += 1
             cReward = 0.0
             curEnv = ParseEnvironment(self.env.reset()[0], reward=1.0, isDone=False, isTruncated=False)
 
@@ -120,7 +123,6 @@ class Agent:
                 curEnv = ParseEnvironment(*self.env.step(action))
 
                 # save record of what just happened
-                # TODO fix types
                 thisRecord = ParseRecord(prevEnv, action, curEnv, curEnv.reward)
                 self.memory.push(thisRecord)
 
@@ -130,16 +132,10 @@ class Agent:
                 # # update local variables
                 cReward += curEnv.reward
                 self.totalReward += curEnv.reward
-
-            self.episodeCounter +=1
-            self.__printStats()
-
-
-        pass
-
+                self.__printStats()
 
 
 
 if __name__ == '__main__':
-    agent = Agent(maxEp=10)
+    agent = Agent(maxEp=1000)
     agent.run()
