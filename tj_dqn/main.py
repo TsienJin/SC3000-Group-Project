@@ -52,6 +52,8 @@ class Agent:
         self.memory.push(record)
 
     def predict(self, environment:ParseEnvironment) -> int:
+        print("HEREEEEE")
+        print(environment.cartVel)
         res = self.targetModel.forward(environment.toTensor())
         return torch.argmax(res).detach().numpy()
 
@@ -63,28 +65,40 @@ class Agent:
         # if len(self.memory) < self.MIN_MEM_SIZE:
         #     return
 
-        batch = self.memory.sample(size=self.MEM_BATCH)
-        allStates = np.array([record.state for record in batch])  # need to check if this works; no intellisense
+        if len(self.memory) < 2:
+            return
 
+        batch = self.memory.sample(size=2)
+        allStates = np.array([record.state for record in batch])  # need to check if this works; no intellisense
+        print(allStates)
+
+        predicted = [self.predict(ParseEnvironment(record)) for record in batch]
+        print(type(predicted[0]))
 
     def run(self):
-        # thing = self.env.reset()
-        # curThing = ParseEnvironment(thing[0])
-        # print(self.predict(curThing))
-        # print(self.env.reset())
-        # print(self.env.step(0))
-        #
-        # curEnv = ParseEnvironment(*self.env.reset(), isDone=False, isTruncated=False)
-        # print(curEnv.toEnvironment())
-        #
-        # nextEnv = ParseEnvironment(*self.env.step(0))
-        # print(nextEnv.toEnvironment())
-
-        while self.episodeCounter < self.maxEpisode:
-            curEnv = ParseEnvironment(*self.env.reset())
+        while self.episodeCounter < 1:
+            cReward = 0.0
+            curEnv = ParseEnvironment(self.env.reset()[0], reward=1.0, isDone=False, isTruncated=False)
 
             while curEnv.isDone is not True:
-                print(curEnv)
+
+                # interact with env
+                action = self.predict(curEnv)
+                prevEnv = curEnv
+                curEnv = ParseEnvironment(*self.env.step(action))
+
+                # save record of what just happened
+                # TODO fix types
+                # thisRecord = ParseStep(prevEnv.toEnvironment(), action, curEnv.toEnvironment(), curEnv.reward)
+                # self.memory.push(thisRecord.toRecord())
+
+                # train model
+                self.train()
+
+                # update local variables
+                cReward += curEnv.reward
+
+            self.episodeCounter +=1
 
 
         pass
