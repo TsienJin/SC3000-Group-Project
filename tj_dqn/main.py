@@ -6,8 +6,6 @@ from memory import Memory
 from v1 import DQN
 from copy import deepcopy
 from helpers import *
-from localTypes import *
-
 import torch
 
 import gym
@@ -24,26 +22,26 @@ class Agent:
     MAX_EP = 1_000_000
 
     # Q Value vals
-    DISCOUNT = 0.999
-    LEARNING_RATE = 0.8
+    DISCOUNT = 0.9
+    LEARNING_RATE = 0.001
 
     # Epsilon GREEDY vals
     EPS = 0.9999
     EPS_DECAY = 0.999
-    EPS_MIN = 0.1
+    EPS_MIN = 0.05
     EPS_MAX = 1.0
 
     # Memory vals
     MEM_SIZE = 50_000
     MIN_MEM_SIZE = 1_000
-    MEM_BATCH = 1000
-    TARGET_UPDATE_FREQ = 100
+    MEM_BATCH = 200
+    TARGET_UPDATE_FREQ = 75
 
     def __init__(self, maxEp:int=10_000, env=gym.make("CartPole-v1")):
 
         # Bootstrapping to maintain stability of prediction
         self.memory = Memory(maxCapacity=self.MEM_SIZE)
-        self.model = DQN(n_obsv=4, n_actions=2, memory=self.memory)  # updates every iteration
+        self.model = DQN(n_obsv=4, n_actions=2, n_layer=10, n_layerSize=10,learningRate=self.LEARNING_RATE, memory=self.memory)  # updates every iteration
         self.targetModel = deepcopy(self.model)  # updates only once threshold has been reached
 
         # Setting individual stats for the environment to run
@@ -53,8 +51,7 @@ class Agent:
         self.totalReward = 0
 
     def __printStats(self):
-        sys.stdout.flush()
-        print(f"EP: {self.EPS:.3f} | MEM: {len(self.memory)} | EP: {self.episodeCounter} | AVG: {self.totalReward/self.episodeCounter:.5f}", end='\r')
+        print(f"EP: {self.EPS:.3f} | MEM: {len(self.memory)} | EP: {self.episodeCounter} | AVG: {self.totalReward/self.episodeCounter:.5f}")
 
     def predict(self, environment:ParseEnvironment) -> int:
         if self.EPS < self.EPS_MIN:
@@ -68,8 +65,8 @@ class Agent:
 
     def getMaxQ(self, environment:ParseEnvironment) -> torch.tensor:
         res = self.targetModel.forward(environment.toTensor())
-        # print(res)
         return res.clone().detach().numpy()
+
 
     def train(self):
         if len(self.memory) < self.MIN_MEM_SIZE:
@@ -94,7 +91,7 @@ class Agent:
 
             oldFit = self.getMaxQ(env.state)
             toFit = deepcopy(oldFit)
-            toFit[env.action] = newQ
+            toFit[env.action] = (1-self.LEARNING_RATE)*oldFit[env.action] + self.LEARNING_RATE * newQ
 
 
             oldValsToFit.append(oldFit)
@@ -102,7 +99,7 @@ class Agent:
 
         loss = self.model.crit(torch.tensor(np.array(oldValsToFit), requires_grad=True), torch.tensor(np.array(valsToFit), requires_grad=True))
         self.model.optim.zero_grad()
-        loss.backward()  # TODO error here
+        loss.backward()
         self.model.optim.step()
 
         if self.episodeCounter % self.TARGET_UPDATE_FREQ == 0:
@@ -137,5 +134,5 @@ class Agent:
 
 
 if __name__ == '__main__':
-    agent = Agent(maxEp=1000)
+    agent = Agent(maxEp=1_000_000)
     agent.run()
