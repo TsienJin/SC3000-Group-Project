@@ -65,6 +65,7 @@ class DQN(nn.Module):
 
         self.layers = nn.ModuleList(self.__createLayers())
         self.optim = optim.Adam(self.parameters(), lr=self.learningRate)
+        self.crit = torch.nn.SmoothL1Loss()  # Huber loss
 
         self.to(_device)
 
