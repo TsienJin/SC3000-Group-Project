@@ -64,8 +64,9 @@ class DQN(nn.Module):
         self.memory = memory
 
         self.layers = nn.ModuleList(self.__createLayers())
-        self.optim = optim.Adam(self.parameters(), lr=self.learningRate)
+        self.optim = optim.Adam(self.parameters(), lr=self.learningRate, amsgrad=True)
         self.crit = torch.nn.SmoothL1Loss()  # Huber loss
+        # self.crit = torch.nn.MSELoss()
 
         self.to(_device)
 
@@ -94,7 +95,7 @@ class DQN(nn.Module):
         """
         assert (x.dim() == torch.randn(4).dim())
         for layer in self.layers:
-            x = F.relu(layer(x))
+            x = F.leaky_relu(layer(x), negative_slope=0.1)
         return x
 
 

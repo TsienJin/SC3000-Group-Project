@@ -27,6 +27,7 @@ class ParseEnvironment:
     def toObservation(self) -> Observation:
         return Observation(self.cartPos, self.cartVel, self.poleAngle, self.poleVel)
 
+
     def toTensor(self):
         return torch.FloatTensor((self.cartPos, self.cartVel, self.poleAngle, self.poleVel))
 
