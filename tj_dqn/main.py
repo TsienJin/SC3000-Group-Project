@@ -36,8 +36,7 @@ class Agent:
 
     # Memory vals
     MEM_SIZE = 500_000
-    MIN_MEM_SIZE = 1_000
-    MEM_BATCH = 250
+    MEM_BATCH = 750
     TARGET_UPDATE_FREQ = 25
 
     def __init__(self, maxEp:int=10_000, env=gym.make("CartPole-v1")):
@@ -91,7 +90,7 @@ class Agent:
             if not env.state.isDone:
                 newQ = curQ + self.LEARNING_RATE * (env.reward + (self.DISCOUNT * maxFutureQ))
             else:
-                newQ = curQ + env.reward
+                newQ = self.LEARNING_RATE * (curQ + env.reward)
 
             oldFit = self.getMaxQ(env.state)
             toFit = deepcopy(oldFit)
