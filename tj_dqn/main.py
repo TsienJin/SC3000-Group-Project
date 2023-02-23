@@ -22,26 +22,29 @@ class Agent:
     MAX_EP = 1_000_000
 
     # Q Value vals
-    DISCOUNT = 0.999
-    LEARNING_RATE = 0.1
+    DISCOUNT = 0.9
+    LEARNING_RATE = 0.01
+
+    # Soft update
+    TAU = 0.1
 
     # Epsilon GREEDY vals
     EPS = 0.9999
     EPS_DECAY = 0.999
-    EPS_MIN = 0.1
+    EPS_MIN = 0.5
     EPS_MAX = 1.0
 
     # Memory vals
-    MEM_SIZE = 50_000
+    MEM_SIZE = 500_000
     MIN_MEM_SIZE = 1_000
-    MEM_BATCH = 500
-    TARGET_UPDATE_FREQ = 100
+    MEM_BATCH = 250
+    TARGET_UPDATE_FREQ = 25
 
     def __init__(self, maxEp:int=10_000, env=gym.make("CartPole-v1")):
 
         # Bootstrapping to maintain stability of prediction
         self.memory = Memory(maxCapacity=self.MEM_SIZE)
-        self.model = DQN(n_obsv=4, n_actions=2, n_layer=2, n_layerSize=128,learningRate=self.LEARNING_RATE, memory=self.memory)  # updates every iteration
+        self.model = DQN(n_obsv=4, n_actions=2, n_layer=2, n_layerSize=128,learningRate=self.LEARNING_RATE)  # updates every iteration
         self.targetModel = deepcopy(self.model)  # updates only once threshold has been reached
 
         # Setting individual stats for the environment to run
@@ -51,10 +54,10 @@ class Agent:
         self.totalReward = 0
 
     def __printStats(self):
-        print(f"EP: {self.EPS:.3f} | MEM: {len(self.memory)} | EP: {self.episodeCounter} | AVG: {self.totalReward/self.episodeCounter:.5f}")
+        print(f"EPS: {self.EPS:.3f} | MEM: {len(self.memory)} | EP: {self.episodeCounter} | AVG: {self.totalReward/self.episodeCounter:.5f}")
 
     def __printPerEp(self, score:float):
-        print(f"EP: {self.EPS:.3f} | MEM: {len(self.memory)} | EP: {self.episodeCounter} | SCORE: {score} | AVG: {self.totalReward/self.episodeCounter:.5f}")
+        print(f"EPS: {self.EPS:.3f} | MEM: {len(self.memory)} | EP: {self.episodeCounter} | SCORE: {score} | AVG: {self.totalReward/self.episodeCounter:.5f}")
 
     def predict(self, environment:ParseEnvironment) -> int:
         if self.EPS < self.EPS_MIN:
@@ -68,6 +71,7 @@ class Agent:
 
     def getMaxQ(self, environment:ParseEnvironment) -> torch.tensor:
         res = self.model.forward(environment.toTensor())
+        # print(res)
         return res.clone().detach().numpy()
 
 
@@ -82,11 +86,12 @@ class Agent:
 
         for index, env in enumerate(batch):
             maxFutureQ = np.max(self.getMaxQ(env.nextState))
+            curQ = np.max(self.getMaxQ(env.state))
 
             if not env.state.isDone:
-                newQ = env.reward + self.DISCOUNT * maxFutureQ
+                newQ = curQ + self.LEARNING_RATE * (env.reward + (self.DISCOUNT * maxFutureQ))
             else:
-                newQ = env.reward
+                newQ = curQ + env.reward
 
             oldFit = self.getMaxQ(env.state)
             toFit = deepcopy(oldFit)
@@ -96,14 +101,23 @@ class Agent:
             oldValsToFit.append(oldFit)
             valsToFit.append(toFit)
 
-        loss = self.model.crit(torch.tensor(np.array(oldValsToFit), requires_grad=True), torch.tensor(np.array(valsToFit), requires_grad=True))
+        loss = self.model.crit(torch.tensor(np.array(oldValsToFit), requires_grad=True), torch.tensor(np.array(valsToFit), requires_grad=False))
         self.model.optim.zero_grad()
         loss.backward()
         self.model.optim.step()
 
         if self.episodeCounter % self.TARGET_UPDATE_FREQ == 0:
-            # print("Updated model")
+            # OLD METHOD TO FORCE UPDATE
             self.targetModel.load_state_dict(self.model.state_dict())
+
+            # # NEW METHOD using soft update
+            # modelNet = self.model.state_dict()
+            # targetModelNet = self.targetModel.state_dict()
+            #
+            # for key in targetModelNet:
+            #     modelNet[key] = (1-self.TAU)*modelNet[key] + self.TAU*targetModelNet[key]
+            #
+            # self.targetModel.load_state_dict(modelNet)
 
 
     def run(self):

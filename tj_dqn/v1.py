@@ -21,8 +21,7 @@ class DQN(nn.Module):
                  n_obsv: int, n_actions: int, n_layer: int = 1, n_layerSize: int = 6,
                  learningRate: float = 0.0001, gamma: float = 0.95,
                  expDecay: float = 0.999, expMin: float = 0.001, expMax: float = 1.0,
-                 _device: str = "cpu",
-                 memory: Memory = Memory()):
+                 _device: str = "cpu"):
         """
 
         :param n_obsv: size of observation space
@@ -61,11 +60,10 @@ class DQN(nn.Module):
         self.n_layer = n_layer
         self.n_layerSize = n_layerSize
 
-        self.memory = memory
-
         self.layers = nn.ModuleList(self.__createLayers())
-        self.optim = optim.Adam(self.parameters(), lr=self.learningRate, amsgrad=True)
-        self.crit = torch.nn.SmoothL1Loss()  # Huber loss
+        self.crit = torch.nn.SmoothL1Loss()
+        # self.crit = torch.nn.HingeEmbeddingLoss()
+        self.optim = optim.Adam(self.parameters(), lr=self.learningRate)
         # self.crit = torch.nn.MSELoss()
 
         self.to(_device)
