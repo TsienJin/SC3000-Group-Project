@@ -18,12 +18,15 @@ class ParseEnvironment:
         self.isTruncated = isTruncated
 
     def __str__(self):
-        return f"""cPOS: {self.cartPos}\ncVEL: {self.cartVel}\npANG: {self.poleAngle}\npVEL: {self.poleVel}\nreward: {self.reward}\nisDone: {self.isDone}\nisTruncated: {self.isTruncated}
-        """
+        return f"""cPOS: {self.cartPos}\ncVEL: {self.cartVel}\npANG: {self.poleAngle}\npVEL: {self.poleVel}\nreward: {self.reward}\nisDone: {self.isDone}\nisTruncated: {self.isTruncated}"""
+
+    def __repr__(self):
+        return self.__str__()
 
 
     def toObservation(self) -> Observation:
         return Observation(self.cartPos, self.cartVel, self.poleAngle, self.poleVel)
+
 
     def toTensor(self):
         return torch.FloatTensor((self.cartPos, self.cartVel, self.poleAngle, self.poleVel))
@@ -35,8 +38,8 @@ class ParseEnvironment:
         return Environment(self.toObservation(), self.reward, self.isDone, self.isTruncated)
 
 
-class ParseStep:
-    def __init__(self, state: Environment, action: int, nextState: Environment, reward: float):
+class ParseRecord:
+    def __init__(self, state: ParseEnvironment, action: int, nextState: ParseEnvironment, reward: float):
         assert action in [0, 1]
         self.state = state
         self.action = action

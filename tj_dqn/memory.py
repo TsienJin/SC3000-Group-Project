@@ -11,6 +11,7 @@ src: https://deeplizard.com/learn/video/Bcuj2fTH4_4
 import random
 from collections import deque
 
+from helpers import ParseEnvironment, ParseRecord
 from localTypes import Observation, Record, Environment
 
 
@@ -25,10 +26,9 @@ class Memory:
     def __str__(self) -> str:
         return f"""Memory() capacity [{self.__len__}/{self.cap}]"""
 
-    def push(self, record:Environment) -> None:
+    def push(self, record:ParseRecord) -> None:
         self.memory.append(record)
 
-    def sample(self, size:int) -> [Environment]:
+    def sample(self, size:int) -> [ParseRecord]:
         assert size>0
-
         return random.sample(self.memory, size)
