@@ -66,7 +66,7 @@ class DQN(nn.Module):
         self.optim = optim.Adam(self.parameters(), lr=self.learningRate)
         # self.crit = torch.nn.MSELoss()
 
-        self.to(_device)
+        # self.to(_device)
 
     def __createLayers(self):
         """
@@ -85,6 +85,14 @@ class DQN(nn.Module):
 
         return layers
 
+    def fit(self, predictedVals:torch.tensor, toFit:torch.tensor):
+        optim = torch.optim.Adam(self.parameters(), lr=self.learningRate)
+        loss = self.crit(predictedVals, toFit)
+        optim.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_value_(self.parameters(), 100)
+        optim.step()
+
     def forward(self, x:torch.float32) -> torch.float32:
         """
         Processes the given state and returns a tensor with qValues for actions
@@ -93,7 +101,7 @@ class DQN(nn.Module):
         """
         assert (x.dim() == torch.randn(4).dim())
         for layer in self.layers:
-            x = F.leaky_relu(layer(x), negative_slope=0.1)
+            x = F.leaky_relu(layer(x), negative_slope=0.001)
         return x
 
 
