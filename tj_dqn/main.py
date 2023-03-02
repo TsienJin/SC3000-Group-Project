@@ -26,25 +26,24 @@ class Agent:
     LEARNING_RATE = 0.01
 
     # Soft update
-    TAU = 0.1
+    TAU = 0.8
 
     # Epsilon GREEDY vals
     EPS = 0.9999
     EPS_DECAY = 0.999
-    EPS_MIN = 0.5
+    EPS_MIN = 0.01
     EPS_MAX = 1.0
 
     # Memory vals
     MEM_SIZE = 500_000
-    MIN_MEM_SIZE = 1_000
-    MEM_BATCH = 250
+    MEM_BATCH = 500
     TARGET_UPDATE_FREQ = 25
 
     def __init__(self, maxEp:int=10_000, env=gym.make("CartPole-v1")):
 
         # Bootstrapping to maintain stability of prediction
         self.memory = Memory(maxCapacity=self.MEM_SIZE)
-        self.model = DQN(n_obsv=4, n_actions=2, n_layer=2, n_layerSize=128,learningRate=self.LEARNING_RATE)  # updates every iteration
+        self.model = DQN(n_obsv=4, n_actions=2, n_layer=2, n_layerSize=64, learningRate=self.LEARNING_RATE)  # updates every iteration
         self.targetModel = deepcopy(self.model)  # updates only once threshold has been reached
 
         # Setting individual stats for the environment to run
@@ -57,7 +56,10 @@ class Agent:
         print(f"EPS: {self.EPS:.3f} | MEM: {len(self.memory)} | EP: {self.episodeCounter} | AVG: {self.totalReward/self.episodeCounter:.5f}")
 
     def __printPerEp(self, score:float):
-        print(f"EPS: {self.EPS:.3f} | MEM: {len(self.memory)} | EP: {self.episodeCounter} | SCORE: {score} | AVG: {self.totalReward/self.episodeCounter:.5f}")
+        print(f"EPS: {self.EPS:.3f} | MEM: {len(self.memory):6.0f} | EP: {self.episodeCounter} | SCORE: {score:3.0f} | AVG: {self.totalReward/self.episodeCounter:3.3f}")
+
+    def __printModelWeights(self):
+        print(self.model.state_dict())
 
     def predict(self, environment:ParseEnvironment) -> int:
         if self.EPS < self.EPS_MIN:
@@ -72,52 +74,51 @@ class Agent:
     def getMaxQ(self, environment:ParseEnvironment) -> torch.tensor:
         res = self.model.forward(environment.toTensor())
         # print(res)
-        return res.clone().detach().numpy()
+        return res
 
 
     def train(self):
         if len(self.memory) < self.MEM_BATCH:
             return
 
-        batch = self.memory.sample(size=self.MEM_BATCH)
+        batch = self.memory.sample(min(self.MEM_BATCH, self.episodeCounter))
 
-        oldValsToFit = []
-        valsToFit = []
+        oldVals = []
+        newVals = []
 
         for index, env in enumerate(batch):
-            maxFutureQ = np.max(self.getMaxQ(env.nextState))
-            curQ = np.max(self.getMaxQ(env.state))
+            maxFutureQ = torch.max(self.getMaxQ(env.nextState))
+            curQ = torch.max(self.getMaxQ(env.state))
 
             if not env.state.isDone:
-                newQ = curQ + self.LEARNING_RATE * (env.reward + (self.DISCOUNT * maxFutureQ))
+                newQ = env.reward + (self.DISCOUNT * maxFutureQ)
             else:
-                newQ = curQ + env.reward
+                newQ = curQ
 
             oldFit = self.getMaxQ(env.state)
-            toFit = deepcopy(oldFit)
+            toFit = self.getMaxQ(env.state)
             toFit[env.action] = newQ
 
+            oldVals.append(oldFit)
+            newVals.append(toFit)
 
-            oldValsToFit.append(oldFit)
-            valsToFit.append(toFit)
+        oldValTensor = torch.stack(oldVals).mean(dim=0)
+        newValTensor = torch.stack(newVals).mean(dim=0)
 
-        loss = self.model.crit(torch.tensor(np.array(oldValsToFit), requires_grad=True), torch.tensor(np.array(valsToFit), requires_grad=False))
-        self.model.optim.zero_grad()
-        loss.backward()
-        self.model.optim.step()
+        self.model.fit(oldValTensor, newValTensor)
 
         if self.episodeCounter % self.TARGET_UPDATE_FREQ == 0:
             # OLD METHOD TO FORCE UPDATE
-            self.targetModel.load_state_dict(self.model.state_dict())
+            # self.targetModel.load_state_dict(self.model.state_dict())
 
             # # NEW METHOD using soft update
-            # modelNet = self.model.state_dict()
-            # targetModelNet = self.targetModel.state_dict()
-            #
-            # for key in targetModelNet:
-            #     modelNet[key] = (1-self.TAU)*modelNet[key] + self.TAU*targetModelNet[key]
-            #
-            # self.targetModel.load_state_dict(modelNet)
+            modelNet = self.model.state_dict()
+            targetModelNet = self.targetModel.state_dict()
+
+            for key in targetModelNet:
+                modelNet[key] = (1-self.TAU)*modelNet[key] + self.TAU*targetModelNet[key]
+
+            self.targetModel.load_state_dict(modelNet)
 
 
     def run(self):
@@ -144,6 +145,7 @@ class Agent:
                 cReward += curEnv.reward
                 self.totalReward += curEnv.reward
                 # self.__printStats()
+            # self.__printModelWeights()
             self.__printPerEp(cReward)
 
 
