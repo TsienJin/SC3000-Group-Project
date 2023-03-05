@@ -26,24 +26,24 @@ class Agent:
     LEARNING_RATE = 0.01
 
     # Soft update
-    TAU = 0.8
+    TAU = 0.3
 
     # Epsilon GREEDY vals
     EPS = 0.9999
     EPS_DECAY = 0.999
-    EPS_MIN = 0.01
+    EPS_MIN = 0.5
     EPS_MAX = 1.0
 
     # Memory vals
     MEM_SIZE = 500_000
     MEM_BATCH = 500
-    TARGET_UPDATE_FREQ = 25
+    TARGET_UPDATE_FREQ = 10
 
     def __init__(self, maxEp:int=10_000, env=gym.make("CartPole-v1")):
 
         # Bootstrapping to maintain stability of prediction
         self.memory = Memory(maxCapacity=self.MEM_SIZE)
-        self.model = DQN(n_obsv=4, n_actions=2, n_layer=2, n_layerSize=64, learningRate=self.LEARNING_RATE)  # updates every iteration
+        self.model = DQN(n_obsv=4, n_actions=2, n_layer=2, n_layerSize=32, learningRate=self.LEARNING_RATE)  # updates every iteration
         self.targetModel = deepcopy(self.model)  # updates only once threshold has been reached
 
         # Setting individual stats for the environment to run
@@ -81,7 +81,7 @@ class Agent:
         if len(self.memory) < self.MEM_BATCH:
             return
 
-        batch = self.memory.sample(min(self.MEM_BATCH, self.episodeCounter))
+        batch = self.memory.sample(max(self.MEM_BATCH, self.episodeCounter))
 
         oldVals = []
         newVals = []
