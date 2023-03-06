@@ -36,7 +36,7 @@ class Agent:
 
     # Memory vals
     MEM_SIZE = 500_000
-    MEM_BATCH = 50
+    MEM_BATCH = 100
     TARGET_UPDATE_FREQ = 10
 
     def __init__(self, maxEp:int=10_000, env=gym.make("CartPole-v1")):
