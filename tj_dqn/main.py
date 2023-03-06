@@ -22,11 +22,11 @@ class Agent:
     MAX_EP = 1_000_000
 
     # Q Value vals
-    DISCOUNT = 0.9
-    LEARNING_RATE = 0.01
+    DISCOUNT = 0.8
+    LEARNING_RATE = 0.2
 
     # Soft update
-    TAU = 0.3
+    TAU = 0.1
 
     # Epsilon GREEDY vals
     EPS = 0.9999
@@ -36,7 +36,7 @@ class Agent:
 
     # Memory vals
     MEM_SIZE = 500_000
-    MEM_BATCH = 500
+    MEM_BATCH = 50
     TARGET_UPDATE_FREQ = 10
 
     def __init__(self, maxEp:int=10_000, env=gym.make("CartPole-v1")):
