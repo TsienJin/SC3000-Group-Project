@@ -36,14 +36,14 @@ class Agent:
 
     # Memory vals
     MEM_SIZE = 500_000
-    MEM_BATCH = 100
+    MEM_BATCH = 1000
     TARGET_UPDATE_FREQ = 10
 
     def __init__(self, maxEp:int=10_000, env=gym.make("CartPole-v1")):
 
         # Bootstrapping to maintain stability of prediction
         self.memory = Memory(maxCapacity=self.MEM_SIZE)
-        self.model = DQN(n_obsv=4, n_actions=2, n_layer=2, n_layerSize=32, learningRate=self.LEARNING_RATE)  # updates every iteration
+        self.model = DQN(n_obsv=4, n_actions=2, n_layer=4, n_layerSize=6, learningRate=self.LEARNING_RATE)  # updates every iteration
         self.targetModel = deepcopy(self.model)  # updates only once threshold has been reached
 
         # Setting individual stats for the environment to run
