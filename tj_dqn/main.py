@@ -22,7 +22,7 @@ class Agent:
     MAX_EP = 1_000_000
 
     # Q Value vals
-    DISCOUNT = 0.8
+    DISCOUNT = 0.7
     LEARNING_RATE = 0.2
 
     # Soft update
@@ -36,14 +36,15 @@ class Agent:
 
     # Memory vals
     MEM_SIZE = 500_000
-    MEM_BATCH = 1000
-    TARGET_UPDATE_FREQ = 10
+    # src https://ai.stackexchange.com/questions/23254/is-there-a-logical-method-of-deducing-an-optimal-batch-size-when-training-a-deep
+    MEM_BATCH = 64
+    TARGET_UPDATE_FREQ = 5
 
     def __init__(self, maxEp:int=10_000, env=gym.make("CartPole-v1")):
 
         # Bootstrapping to maintain stability of prediction
         self.memory = Memory(maxCapacity=self.MEM_SIZE)
-        self.model = DQN(n_obsv=4, n_actions=2, n_layer=4, n_layerSize=6, learningRate=self.LEARNING_RATE)  # updates every iteration
+        self.model = DQN(n_obsv=4, n_actions=2, n_layer=2, n_layerSize=16, learningRate=self.LEARNING_RATE)  # updates every iteration
         self.targetModel = deepcopy(self.model)  # updates only once threshold has been reached
 
         # Setting individual stats for the environment to run
@@ -86,14 +87,14 @@ class Agent:
         oldVals = []
         newVals = []
 
-        for index, env in enumerate(batch):
+        for _, env in enumerate(batch):
             maxFutureQ = torch.max(self.getMaxQ(env.nextState))
             curQ = torch.max(self.getMaxQ(env.state))
 
             if not env.state.isDone:
-                newQ = env.reward + (self.DISCOUNT * maxFutureQ)
+                newQ = (self.DISCOUNT * curQ) + ((1-self.DISCOUNT) * (maxFutureQ + env.reward))
             else:
-                newQ = curQ
+                newQ = self.DISCOUNT * curQ
 
             oldFit = self.getMaxQ(env.state)
             toFit = self.getMaxQ(env.state)
