@@ -59,6 +59,10 @@ class Agent:
     def __printPerEp(self, score:float):
         print(f"EPS: {self.EPS:.3f} | MEM: {len(self.memory):6.0f} | EP: {self.episodeCounter} | SCORE: {score:3.0f} | AVG: {self.totalReward/self.episodeCounter:3.3f}")
 
+    def __printPerEpFlush(self, score: float):
+        print(
+            f"EPS: {self.EPS:.3f} | MEM: {len(self.memory):6.0f} | EP: {self.episodeCounter} | SCORE: {score:3.0f} | AVG: {self.totalReward / self.episodeCounter:3.3f}\r", flush=False)
+
     def __printModelWeights(self):
         print(self.model.state_dict())
 
@@ -146,6 +150,8 @@ class Agent:
                 cReward += curEnv.reward
                 self.totalReward += curEnv.reward
                 # self.__printStats()
+                # self.__printPerEpFlush(cReward)
+
             # self.__printModelWeights()
             self.__printPerEp(cReward)
 
