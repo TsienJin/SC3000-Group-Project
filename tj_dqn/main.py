@@ -22,14 +22,14 @@ class Agent:
     MAX_EP = 1_000_000
 
     # Q Value vals
-    DISCOUNT = 0.7
-    LEARNING_RATE = 0.2
+    DISCOUNT = 0.9
+    LEARNING_RATE = 0.1
 
     # Soft update
-    TAU = 0.1
+    TAU = 0.2
 
     # Epsilon GREEDY vals
-    EPS = 0.9999
+    EPS = 0.99
     EPS_DECAY = 0.999
     EPS_MIN = 0.5
     EPS_MAX = 1.0
@@ -38,7 +38,7 @@ class Agent:
     MEM_SIZE = 500_000
     # src https://ai.stackexchange.com/questions/23254/is-there-a-logical-method-of-deducing-an-optimal-batch-size-when-training-a-deep
     MEM_BATCH = 64
-    TARGET_UPDATE_FREQ = 5
+    TARGET_UPDATE_FREQ = 2
 
     def __init__(self, maxEp:int=10_000, env=gym.make("CartPole-v1")):
 
@@ -68,6 +68,7 @@ class Agent:
 
     def predict(self, environment:ParseEnvironment) -> int:
         if self.EPS < self.EPS_MIN:
+        # if self.EPS < random.random():
             res = self.targetModel.forward(environment.toTensor())
             return torch.argmax(res).detach().numpy()
         else:
