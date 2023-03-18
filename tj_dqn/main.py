@@ -22,28 +22,29 @@ class Agent:
     MAX_EP = 1_000_000
 
     # Q Value vals
-    DISCOUNT = 0.9
-    LEARNING_RATE = 0.01
+    DISCOUNT = 0.99
+    LEARNING_RATE = 0.1
 
     # Soft update
-    TAU = 0.8
+    TAU = 0.2
 
     # Epsilon GREEDY vals
-    EPS = 0.9999
+    EPS = 0.99
     EPS_DECAY = 0.999
-    EPS_MIN = 0.01
+    EPS_MIN = 0.5
     EPS_MAX = 1.0
 
     # Memory vals
     MEM_SIZE = 500_000
-    MEM_BATCH = 500
-    TARGET_UPDATE_FREQ = 25
+    # src https://ai.stackexchange.com/questions/23254/is-there-a-logical-method-of-deducing-an-optimal-batch-size-when-training-a-deep
+    MEM_BATCH = 64
+    TARGET_UPDATE_FREQ = 2
 
     def __init__(self, maxEp:int=10_000, env=gym.make("CartPole-v1")):
 
         # Bootstrapping to maintain stability of prediction
         self.memory = Memory(maxCapacity=self.MEM_SIZE)
-        self.model = DQN(n_obsv=4, n_actions=2, n_layer=2, n_layerSize=64, learningRate=self.LEARNING_RATE)  # updates every iteration
+        self.model = DQN(n_obsv=4, n_actions=2, n_layer=2, n_layerSize=8, learningRate=self.LEARNING_RATE)  # updates every iteration
         self.targetModel = deepcopy(self.model)  # updates only once threshold has been reached
 
         # Setting individual stats for the environment to run
@@ -58,11 +59,16 @@ class Agent:
     def __printPerEp(self, score:float):
         print(f"EPS: {self.EPS:.3f} | MEM: {len(self.memory):6.0f} | EP: {self.episodeCounter} | SCORE: {score:3.0f} | AVG: {self.totalReward/self.episodeCounter:3.3f}")
 
+    def __printPerEpFlush(self, score: float):
+        print(
+            f"EPS: {self.EPS:.3f} | MEM: {len(self.memory):6.0f} | EP: {self.episodeCounter} | SCORE: {score:3.0f} | AVG: {self.totalReward / self.episodeCounter:3.3f}\r", flush=False)
+
     def __printModelWeights(self):
         print(self.model.state_dict())
 
     def predict(self, environment:ParseEnvironment) -> int:
         if self.EPS < self.EPS_MIN:
+        # if self.EPS < random.random():
             res = self.targetModel.forward(environment.toTensor())
             return torch.argmax(res).detach().numpy()
         else:
@@ -81,31 +87,33 @@ class Agent:
         if len(self.memory) < self.MEM_BATCH:
             return
 
-        batch = self.memory.sample(min(self.MEM_BATCH, self.episodeCounter))
+        batch = self.memory.sample(max(self.MEM_BATCH, self.episodeCounter))
 
         oldVals = []
         newVals = []
 
-        for index, env in enumerate(batch):
+        for _, env in enumerate(batch):
             maxFutureQ = torch.max(self.getMaxQ(env.nextState))
             curQ = torch.max(self.getMaxQ(env.state))
 
             if not env.state.isDone:
-                newQ = env.reward + (self.DISCOUNT * maxFutureQ)
+                newQ = env.reward + self.DISCOUNT * maxFutureQ
             else:
-                newQ = curQ
+                newQ = -1
 
             oldFit = self.getMaxQ(env.state)
             toFit = self.getMaxQ(env.state)
             toFit[env.action] = newQ
 
-            oldVals.append(oldFit)
-            newVals.append(toFit)
+            self.model.fit(oldFit, toFit)
 
-        oldValTensor = torch.stack(oldVals).mean(dim=0)
-        newValTensor = torch.stack(newVals).mean(dim=0)
+        #     oldVals.append(oldFit)
+        #     newVals.append(toFit)
+        #
+        # oldValTensor = torch.stack(oldVals).mean(dim=0)
+        # newValTensor = torch.stack(newVals).mean(dim=0)
 
-        self.model.fit(oldValTensor, newValTensor)
+        # self.model.fit(oldValTensor, newValTensor)
 
         if self.episodeCounter % self.TARGET_UPDATE_FREQ == 0:
             # OLD METHOD TO FORCE UPDATE
@@ -145,6 +153,8 @@ class Agent:
                 cReward += curEnv.reward
                 self.totalReward += curEnv.reward
                 # self.__printStats()
+                # self.__printPerEpFlush(cReward)
+
             # self.__printModelWeights()
             self.__printPerEp(cReward)
 
