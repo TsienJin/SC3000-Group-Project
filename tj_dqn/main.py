@@ -22,7 +22,7 @@ class Agent:
     MAX_EP = 1_000_000
 
     # Q Value vals
-    DISCOUNT = 0.9
+    DISCOUNT = 0.99
     LEARNING_RATE = 0.1
 
     # Soft update
@@ -44,7 +44,7 @@ class Agent:
 
         # Bootstrapping to maintain stability of prediction
         self.memory = Memory(maxCapacity=self.MEM_SIZE)
-        self.model = DQN(n_obsv=4, n_actions=2, n_layer=2, n_layerSize=16, learningRate=self.LEARNING_RATE)  # updates every iteration
+        self.model = DQN(n_obsv=4, n_actions=2, n_layer=2, n_layerSize=8, learningRate=self.LEARNING_RATE)  # updates every iteration
         self.targetModel = deepcopy(self.model)  # updates only once threshold has been reached
 
         # Setting individual stats for the environment to run
@@ -97,21 +97,23 @@ class Agent:
             curQ = torch.max(self.getMaxQ(env.state))
 
             if not env.state.isDone:
-                newQ = (self.DISCOUNT * curQ) + ((1-self.DISCOUNT) * (maxFutureQ + env.reward))
+                newQ = env.reward + self.DISCOUNT * maxFutureQ
             else:
-                newQ = self.DISCOUNT * curQ
+                newQ = -1
 
             oldFit = self.getMaxQ(env.state)
             toFit = self.getMaxQ(env.state)
             toFit[env.action] = newQ
 
-            oldVals.append(oldFit)
-            newVals.append(toFit)
+            self.model.fit(oldFit, toFit)
 
-        oldValTensor = torch.stack(oldVals).mean(dim=0)
-        newValTensor = torch.stack(newVals).mean(dim=0)
+        #     oldVals.append(oldFit)
+        #     newVals.append(toFit)
+        #
+        # oldValTensor = torch.stack(oldVals).mean(dim=0)
+        # newValTensor = torch.stack(newVals).mean(dim=0)
 
-        self.model.fit(oldValTensor, newValTensor)
+        # self.model.fit(oldValTensor, newValTensor)
 
         if self.episodeCounter % self.TARGET_UPDATE_FREQ == 0:
             # OLD METHOD TO FORCE UPDATE
