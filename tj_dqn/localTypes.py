@@ -5,5 +5,4 @@ Observation = namedtuple("observation", ("cartPos", "cartVel", "poleAngle", "pol
 
 Environment = namedtuple("environment", ("observation", "reward", "isDone", "isTruncated"))
 
-# Referenced as "experience" in the DQN paper
-Record = namedtuple("record", ("state", "action", "nextState", "reward"))
+Record = namedtuple("record", ("state", "action", "nextState", "reward", "qValue"))
