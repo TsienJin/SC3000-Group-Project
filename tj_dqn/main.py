@@ -68,7 +68,6 @@ class Agent:
 
     def predict(self, environment:ParseEnvironment) -> int:
         if self.EPS < self.EPS_MIN:
-        # if self.EPS < random.random():
             res = self.targetModel.forward(environment.toTensor())
             return torch.argmax(res).detach().numpy()
         else:
@@ -81,6 +80,10 @@ class Agent:
         res = self.model.forward(environment.toTensor())
         # print(res)
         return res
+
+    def getMaxQValue(self, environment:ParseEnvironment) -> float:
+        res = self.getMaxQ(environment)
+        return torch.max(res)
 
 
     def train(self):
@@ -99,7 +102,7 @@ class Agent:
             if not env.state.isDone:
                 newQ = env.reward + self.DISCOUNT * maxFutureQ
             else:
-                newQ = -1
+                newQ = self.DISCOUNT * curQ
 
             oldFit = self.getMaxQ(env.state)
             toFit = self.getMaxQ(env.state)
@@ -143,7 +146,7 @@ class Agent:
                 curEnv = ParseEnvironment(*self.env.step(action))
 
                 # save record of what just happened
-                thisRecord = ParseRecord(prevEnv, action, curEnv, curEnv.reward)
+                thisRecord = ParseRecord(prevEnv, action, curEnv, curEnv.reward, self.getMaxQValue(prevEnv)-self.getMaxQValue(curEnv))
                 self.memory.push(thisRecord)
 
                 # # train model

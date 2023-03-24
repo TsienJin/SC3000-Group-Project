@@ -18,17 +18,34 @@ from localTypes import Observation, Record, Environment
 class Memory:
     def __init__(self, maxCapacity:int=10000):
         self.cap = maxCapacity
-        self.memory = deque([], maxlen=maxCapacity)
+        self.memory = deque(maxlen=self.cap)
 
     def __len__(self) -> int:
-        return len(self.memory)
+        return self.memory.__len__()
 
     def __str__(self) -> str:
         return f"""Memory() capacity [{self.__len__}/{self.cap}]"""
 
+
+    def __getInsertIndex(self, record:ParseRecord):
+
+        if self.__len__()==0:
+            return 0
+
+        n = 0
+
+        try:
+            while record < self.memory[n]:
+                n += 1
+        finally:
+            return n
+
+
     def push(self, record:ParseRecord) -> None:
-        self.memory.append(record)
+        self.memory.insert(self.__getInsertIndex(record), record)
 
     def sample(self, size:int) -> [ParseRecord]:
         assert size>0
-        return random.sample(self.memory, size)
+
+        return list(self.memory)[0:size]
+
