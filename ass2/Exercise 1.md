@@ -1,4 +1,4 @@
-# Exercise 1
+# Exercise 1: The Smart Phone Rivalry
 
 > `sumsum`, a competitor of `appy`, developed some nice smart phone technology called `galactica-s3`, all of which was stolen by `stevey`, who is a boss of `appy`. It is unethical for a boss to steal business from rival companies. A competitor of is a rival. Smart phone technology is business.
 
@@ -8,16 +8,16 @@
 
 > A competitor of is a rival.
 
-This statement implies that both `sumsum` and `appy` are companies within the same industry. The following logical deduction can be made, with the assumption that not all companies are competitors to each other.
+This statement implies that both `sumsum` and `appy` are companies within the same industry. In the real world, not all companies are competitors to each other; however, this question only states two companies, thus we will be making the assumption that all companies are competitors with each other.
 
 $$
-\exist_{x}\exist_{y}\;Company(x) \land Company(y) \to Competitor(x,y)
+\forall_{x}\forall_{y}\;Company(x) \land Company(y) \to Competitor(x,y)
 $$
 
 Furthermore, since competitors are rivals with each other, we can deduce the following equivilance relation. 
 
 $$
-\exist_x\exist_y\; Competitor(x,y) \iff Rival(x,y)
+\forall_x\forall_y\; Competitor(x,y) \iff Rival(x,y)
 $$
 
 > ...developed some nice smart phone technology called `galactica-s3`...
