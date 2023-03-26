@@ -39,12 +39,19 @@ class ParseEnvironment:
 
 
 class ParseRecord:
-    def __init__(self, state: ParseEnvironment, action: int, nextState: ParseEnvironment, reward: float):
+    def __init__(self, state: ParseEnvironment, action: int, nextState: ParseEnvironment, reward:float, qValue:float=0):
         assert action in [0, 1]
         self.state = state
         self.action = action
         self.nextState = nextState
         self.reward = reward
+        self.qValue = qValue
+
+    def __eq__(self, other):
+        return self.qValue == other.qValue
+
+    def __lt__(self, other):
+        return self.qValue < other.qValue
 
     def toRecord(self) -> Record:
-        return Record(self.state, self.action, self.nextState, self.reward)
+        return Record(self.state, self.action, self.nextState, self.reward, self.qValue)
