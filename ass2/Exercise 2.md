@@ -494,7 +494,7 @@ The original Royal succession rule is pivotal on the following predicate where e
 
 1. The $n^{th}$ person is the same gender and born before the $(n+1)^{th}$ person.
 
-2. If they are of differnt genders, the $n^{th}$ person must be male and the (n+1)^{th}$ person must be female.
+2. If they are of differnt genders, the $n^{th}$ person must be male and the $(n+1)^{th}$ person must be female.
 
 > ```prolog
 > % Ensures that n^th and (n+1)^th follows the royal rule
