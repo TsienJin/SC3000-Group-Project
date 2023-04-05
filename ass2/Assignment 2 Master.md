@@ -41,13 +41,13 @@ Ong Tsien Jin -- U2120567H
 This statement implies that both `sumsum` and `appy` are companies within the same industry. In the real world, not all companies are competitors to each other; however, this question only states two companies, thus we will be making the assumption that all companies are competitors with each other.
 
 $$
-\forall_{x}\forall_{y}\;Company(x) \land Company(y) \to Competitor(x,y)
+\forall_{x}\forall_{y}\; (Company(x) \land Company(y) \to Competitor(x,y))
 $$
 
 Furthermore, since competitors are rivals with each other, we can deduce the following equivilance relation.
 
 $$
-\forall_x\forall_y\; Competitor(x,y) \iff Rival(x,y)
+\forall_x\forall_y\; (Competitor(x,y) \iff Rival(x,y))
 $$
 
 > ...developed some nice smart phone technology called `galactica-s3`...
@@ -55,7 +55,7 @@ $$
 A company can develop smart phone technology, but not all the smart phone technology used by the company is developed from the same company.
 
 $$
-\exist_{x} \exist_{t} \; Company(x) \;\land\; SmartPhoneTechnology(t) \to Develop(x,t)
+\exist_{x} \exist_{t} \;(Company(x) \;\land\; SmartPhoneTechnology(t) \to Develop(x,t))
 $$
 
 > Smart phone technology is business.
@@ -63,7 +63,7 @@ $$
 We can further deduce a logical statement that all smart phone technology is business.
 
 $$
-\forall_t\; SmartPhoneTechnology(t) \to Business(t)
+\forall_t\; (SmartPhoneTechnology(t) \to Business(t))
 $$
 
 > ...all of which was stolen by `stevey`...
@@ -71,7 +71,7 @@ $$
 We can infer that `stevey` is a person. This suggests that a person can steal technology.
 
 $$
-\exist_t\exist_h\; SmartPhoneTechnology(t) \;\land\; Person(h) \to Steals(h, t)
+\exist_t\exist_h\; (SmartPhoneTechnology(t) \;\land\; Person(h) \to Steals(h, t))
 $$
 
 > ...`stevey`, who is a boss of `appy`.
@@ -79,7 +79,7 @@ $$
 From the earlier deduction that `stevey` is a person, this informs us that the boss of `appy` (a company) is a person. Thus, for every company, there is a person as its boss.
 
 $$
-\forall_x\; Company(x) \to (\exist_h\;Person(h) \to Boss(x, h))
+\forall_x\; (Company(x) \to (\exist_h\;Person(h) \land Boss(x, h)))
 $$
 
 > It is unethical for a boss to steal businsess from rival companies.
@@ -90,16 +90,19 @@ We can break this statement down into smaller logical statements to follow. Stat
 
 1. There are two companies that are rivals.
 
-2. The boss of one of these comapnies is a person.
+2. The boss of one of these companies is a person.
 
 3. The boss can steal busines from rival companies.
 
-4. Stealing business from rival comapnies is always unethical.
+4. Stealing business from rival companies is always unethical.
 
 Therefore these statements can be expressed in natural language -- there are two companies which are rivals, where the boss of one company steals business from the rival company; this is unethical.
 
 $$
-\exist_x\exist_y\exist_t\exist_h \; Boss(x,h) \;\land\; Rival(x,y) \;\land\; Steals(h,t) \;\land\; Develop(y, t) \to \neg ethical
+\begin{aligned}
+\exist_x\exist_y\exist_t\exist_h \;
+(Boss(x,h)\;\land\; Rival(x,y) \;\land\; Steals(h,t) \;\land\; Develop(y, t)\to \neg ethical)
+\end{aligned}
 
 $$
 
@@ -118,7 +121,7 @@ company(appy).
 smartphonetechnology(galactica-s3).
 
 % Develop tech relations
-develop(sumsum, galactica-s3) :- company(sumsum), company(galactica-s3).
+develop(sumsum, galactica-s3) :- company(sumsum), smartphonetechnology(galactica-s3).
 
 % Stevey is a bad guy
 person(stevey).
@@ -131,8 +134,8 @@ steals(stevey, galactica-s3) :- person(stevey), business(galactica-s3).
 Defining competitors and rivals.
 
 > $$
-> \forall_{x}\forall_{y}\;Company(x) \land Company(y) \to Competitor(x,y) \\
-\forall_x\forall_y\; Competitor(x,y) \iff Rival(x,y)
+> \forall_{x}\forall_{y}\;(Company(x) \land Company(y) \to Competitor(x,y)) \\
+\forall_x\forall_y\; (Competitor(x,y) \iff Rival(x,y))
 > $$
 
 ```prolog
@@ -144,7 +147,7 @@ rival(X,Y) :- competitor(X,Y).
 Defining the definition that smart phone technology is business.
 
 > $$
-> \forall_t\; SmartPhoneTechnology(t) \to Business(t)
+> \forall_t\; (SmartPhoneTechnology(t) \to Business(t))
 > $$
 
 ```prolog
@@ -154,7 +157,12 @@ business(X) :- smartphonetechnology(X).
 Defining the predicate `not_ethical`.
 
 > $$
-> \exist_x\exist_y\exist_t\exist_h \; Boss(x,h) \;\land\; Rival(x,y) \;\land\; Steals(h,t) \;\land\; Develop(y, t) \to \neg ethical
+> \exist_x\exist_y\exist_t\exist_h \;\\
+(Boss(x,h) \;\land\;
+Rival(x,y) \;\land\;
+Steals(h,t) \;\land\;
+Develop(y, t)
+\to \neg ethical)
 > $$
 
 ```prolog

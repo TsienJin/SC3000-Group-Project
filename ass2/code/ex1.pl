@@ -15,6 +15,7 @@ rival(X,Y) :- competitor(X,Y).
 % Develop tech relations
 develop(sumsum, galactica-s3) :- company(sumsum), smartphonetechnology(galactica-s3).
 
+
 % Stevey is a bad guy
 person(stevey).
 boss(appy, stevey) :- company(appy), person(stevey).
